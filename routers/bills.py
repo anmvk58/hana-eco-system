@@ -2,12 +2,13 @@ from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 from models import Bills
-from database import SessionLocal, get_db
+from database import get_db
+from utils.date_utils import get_current_date
+from utils.string_utils import gen_group_bill_code, get_org_bill_code
 from .auth import get_current_user
-import uuid
 
 router = APIRouter(
     prefix='/bills',
@@ -27,7 +28,6 @@ class BillsRequest(BaseModel):
     is_transfer: bool
     shipper_id: int = Field(gt=0)
     shipper_name: str
-    business_date: int = Field(gt=20250101)
 
 
 class UpdateBillRequest(BaseModel):
@@ -36,7 +36,7 @@ class UpdateBillRequest(BaseModel):
     shipper_id: int = Field(gt=0)
     shipper_name: str
 
-
+# Nhập hóa đơn theo batch là 1 danh sách các Bill Request
 @router.post("/create-batch-bill", status_code=status.HTTP_201_CREATED)
 async def create_batch_bill(user: user_dependency,
                             db: db_dependency,
@@ -45,7 +45,11 @@ async def create_batch_bill(user: user_dependency,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Authentication Failed')
 
     try:
-        new_bills = [Bills(**item.model_dump(), group_bill=str(uuid.uuid4())[:6].upper()) for item in bills_request]
+        new_bills = [Bills(**item.model_dump(),
+                           group_bill=gen_group_bill_code(),
+                           org_bill_code=get_org_bill_code(item.bill_code),
+                           business_date=get_current_date()) for item in bills_request]
+
         db.add_all(new_bills)
         db.commit()
         return {"message": f"Đã tạo {len(new_bills)} bản ghi thành công!"}
@@ -59,6 +63,7 @@ async def create_batch_bill(user: user_dependency,
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Lỗi server: {str(e)}")
 
 
+# Update 1 Hóa đơn theo request Body = UpdateBillRequest ở trên
 @router.put("/bill-exchange-shipper/{bill_code}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_bill(user: user_dependency,
                       db: db_dependency,
