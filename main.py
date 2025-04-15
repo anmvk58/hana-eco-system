@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette import status
 from starlette.responses import RedirectResponse
-
+from fastapi.templating import Jinja2Templates
 import models
 from database import engine
 from routers import auth, admin, users, bills, shippers, todos
@@ -25,3 +25,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def test(request: Request):
     return RedirectResponse(url="/todos/todo-page", status_code=status.HTTP_302_FOUND)
 
+
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/test_ui")
+def test_ui(request: Request):
+    return templates.TemplateResponse(name="base/base.html", context={"request": request})
