@@ -1,3 +1,5 @@
+from sqlalchemy.orm import relationship
+
 from database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, TIMESTAMP, func
 
@@ -61,13 +63,15 @@ class UserRequest(Base):
     __tablename__ = 'user_requests'
 
     request_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id_reqeust = Column(Integer, nullable=False)
+    user_id_request = Column(Integer, nullable=False)
     bill_code = Column(String(13))
     type = Column(String(50))
     content = Column(String(254))
     status = Column(String(10))
-    user_id_approved = Column(Integer, nullable=True)
+    user_id_approved = Column(Integer, ForeignKey('users.id'))
     reason = Column(String(254))
     business_date = Column(Integer)
     create_at = Column(TIMESTAMP, server_default=func.now())
     approved_at = Column(TIMESTAMP)
+
+    approver = relationship("Users")

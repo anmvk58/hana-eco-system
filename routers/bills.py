@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette import status
 from models import Bills
 from database import get_db
@@ -10,6 +10,8 @@ from utils.date_utils import get_current_date
 from utils.string_utils import gen_group_bill_code, get_org_bill_code, extract_duplicate_bill
 from .auth import get_current_user
 from typing import Optional
+from fastapi.templating import Jinja2Templates
+from .common import redirect_to_login
 
 router = APIRouter(
     prefix='/bills',
@@ -30,7 +32,6 @@ class BillsRequest(BaseModel):
     shipper_id: int = Field(gt=0)
     shipper_name: str
 
-
 class UpdateBillRequest(BaseModel):
     amount: int = Field(gt=0)
     is_transfer: bool
@@ -44,6 +45,28 @@ class BillFilter(BaseModel):
     from_date: int
     to_date: int
 
+### Pages:
+templates = Jinja2Templates(directory="templates")
+
+@router.get('/add-bill')
+async def render_add_bill_page(request: Request):
+    try:
+        user = await get_current_user(request.cookies.get("access_token"))
+
+        if user is None:
+            return redirect_to_login()
+
+        return templates.TemplateResponse(name="bills/add-bill.html",
+                                          context={
+                                              "request": request,
+                                              "user": user
+                                          })
+
+    except:
+        return redirect_to_login()
+
+
+### Endpoints:
 # Nhập hóa đơn theo batch là 1 danh sách các Bill Request
 @router.post("/create-batch-bill", status_code=status.HTTP_201_CREATED)
 async def create_batch_bill(user: user_dependency,

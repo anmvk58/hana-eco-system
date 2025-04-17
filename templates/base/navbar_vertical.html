@@ -1,0 +1,81 @@
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-content ">
+        <a class="sidebar-brand" href="index.html">
+            <i class="align-middle" data-feather="box"></i>
+            <span class="align-middle">AppStack</span>
+        </a>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-header">
+                Main
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link" href="calendar.html">
+                    <i class="align-middle" data-feather="calendar"></i> <span class="align-middle">Calendar</span>
+                    <span class="sidebar-badge badge badge-primary">New</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#maps" data-toggle="collapse" class="sidebar-link collapsed">
+                    <i class="align-middle" data-feather="map-pin"></i> <span class="align-middle">Maps</span>
+                </a>
+                <ul id="maps" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
+                    <li class="sidebar-item"><a class="sidebar-link" href="maps-google.html">Google Maps</a></li>
+                    <li class="sidebar-item"><a class="sidebar-link" href="maps-vector.html">Vector Maps</a></li>
+                </ul>
+            </li>
+            <li class="sidebar-item">
+                <a href="#multi" data-toggle="collapse" class="sidebar-link">
+                    <i class="align-middle" data-feather="share-2"></i> <span class="align-middle">Multi Level</span>
+                </a>
+                <ul id="multi" class="sidebar-dropdown list-unstyled collapse" data-parent="#sidebar">
+                    <li class="sidebar-item">
+                        <a href="#multi-2" data-toggle="collapse" class="sidebar-link collapsed">
+                            Two Levels
+                        </a>
+                        <ul id="multi-2" class="sidebar-dropdown list-unstyled collapse">
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" href="#">Item 1</a>
+                                <a class="sidebar-link" href="#">Item 2</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#multi-3" data-toggle="collapse" class="sidebar-link collapsed">
+                            Three Levels
+                        </a>
+                        <ul id="multi-3" class="sidebar-dropdown list-unstyled collapse">
+                            <li class="sidebar-item">
+                                <a href="#multi-3-1" data-toggle="collapse" class="sidebar-link collapsed">
+                                    Item 1
+                                </a>
+                                <ul id="multi-3-1" class="sidebar-dropdown list-unstyled collapse">
+                                    <li class="sidebar-item">
+                                        <a class="sidebar-link" href="#">Item 1</a>
+                                        <a class="sidebar-link" href="#">Item 2</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" href="#">Item 2</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="sidebar-bottom d-none d-lg-block">
+            <div class="media">
+                <img class="rounded-circle mr-3" src="{{ url_for('static', path='/img/avatars/avatar-2.jpg') }}" width="40" height="40">
+                <div class="media-body">
+                    <h5 class="mb-1">{{user.username}}</h5>
+                    <div>
+                        <i class="fas fa-circle text-success"></i> Online
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</nav>
