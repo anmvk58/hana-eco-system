@@ -8,9 +8,19 @@
 <h1 class="h3 mb-3 text-primary">Danh sách yêu cầu</h1>
 
 <div class="row" style="margin-bottom: 10px;">
-    <div class="col-md-3" id="search-div">
-        <input type="text" class="form-control" id="bill_input" placeholder="Nhập mã Bill"
-               autocomplete="off">
+    <div class="col-md-3">
+        <select class="custom-select mb-3">
+            <option selected="">Chọn trạng thái</option>
+            <option>CREATE</option>
+            <option>REJECT</option>
+            <option>APPROVE</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label class="form-label">Date Range</label>
+            <input class="form-control" type="text" name="daterange" value="01/01/2018 - 01/15/2018">
+        </div>
     </div>
     <div class="col-md-3" id="button-function">
         <button class="btn btn-primary" id="add-new-bill" onclick="add_new_bill()"><i
@@ -24,12 +34,6 @@
         <button class="btn btn-outline-info" data-toggle="modal" data-target="#defaultModalPrimary"><i
                 class="fa fa-check-square"></i> Xác nhận chốt đơn
         </button>
-    </div>
-    <div class="col-md-1" id="title-money">
-        <strong>Tổng tiền</strong>
-    </div>
-    <div class="col-md-2" i>
-        <input type="text" class="form-control" id="total_bill" value="0" disabled>
     </div>
 </div>
 
@@ -96,4 +100,6 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
+
