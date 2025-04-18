@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette import status
 from models import Bills, Shippers, UserRequest, Users
 from database import get_db
-from utils.date_utils import get_current_date
+from utils.date_utils import get_current_date, get_current_date_for_datepicker
 from .auth import get_current_user
 from fastapi.templating import Jinja2Templates
 
@@ -60,38 +60,42 @@ class RequestForm(BaseModel):
 templates = Jinja2Templates(directory="templates")
 
 
+# Render list request page
 @router.get('/list-requests')
 async def render_view_list_request_page(request: Request, db: db_dependency):
-    # try:
-    user = await get_current_user(request.cookies.get("access_token"))
+    try:
+        user = await get_current_user(request.cookies.get("access_token"))
 
-    if user is None:
-        return redirect_to_login()
+        if user is None:
+            return redirect_to_login()
 
-    result = db.query(UserRequest, Users).join(Users).filter(UserRequest.business_date == get_current_date()).all()
+        result = db.query(UserRequest, Users).outerjoin(Users).filter(
+            UserRequest.business_date == get_current_date()).all()
 
-    requests_model = [{
-        "request_id": user_request.request_id,
-        "bill_code": user_request.bill_code,
-        "type": user_request.type,
-        "content": user_request.content,
-        "status": user_request.status,
-        "approver": user_request.approver,
-        "reason": user_request.reason,
-        "create_at": user_request.create_at,
-        "approved_at": user_request.approved_at,
-    } for user_request, user in result]
+        requests_model = [{
+            "request_id": user_request.request_id,
+            "bill_code": user_request.bill_code,
+            "type": user_request.type,
+            "content": user_request.content,
+            "status": user_request.status,
+            "approver": user_request.approver.username if user_request.approver is not None else '',
+            "reason": user_request.reason if user_request.reason is not None else '',
+            "create_at": user_request.create_at,
+            "approved_at": user_request.approved_at if user_request.approved_at is not None else '',
+        } for user_request, user in result]
 
-    return templates.TemplateResponse(name="managers/list-requests.html",
-                                      context={
-                                          "request": request,
-                                          "requests_model": requests_model,
-                                          "user": user
-                                      })
+        return templates.TemplateResponse(name="managers/list-requests.html",
+                                          context={
+                                              "request": request,
+                                              "requests_model": requests_model,
+                                              "date_picker": get_current_date_for_datepicker(),
+                                              "user": user
+                                          })
 
 
-# except:
-#     return redirect_to_login()
+    except Exception as e:
+        # return redirect_to_login()
+        return str(e)
 
 
 ### Endpoints
@@ -161,23 +165,39 @@ async def get_all_request_by_status(user: user_dependency,
 
     # Main Logic
     try:
-        if request_status is None:
-            request_model = db.query(UserRequest).filter(UserRequest.business_date >= from_date,
-                                                         UserRequest.business_date <= to_date).all()
+        if request_status not in ['CREATE', 'REJECT', 'APPROVE']:
+            result = db.query(UserRequest, Users).outerjoin(Users).filter(
+                UserRequest.business_date >= from_date,
+                UserRequest.business_date <= to_date).all()
+
         else:
-            request_model = db.query(UserRequest).filter(UserRequest.business_date >= from_date,
-                                                         UserRequest.business_date <= to_date,
-                                                         UserRequest.status == request_status.upper()).all()
-        return request_model
+            result = db.query(UserRequest, Users).outerjoin(Users).filter(
+                UserRequest.business_date >= from_date,
+                UserRequest.business_date <= to_date,
+                UserRequest.status == request_status.upper()).all()
+
+        requests_model = [{
+            "request_id": user_request.request_id,
+            "bill_code": user_request.bill_code,
+            "type": user_request.type,
+            "content": user_request.content,
+            "status": user_request.status,
+            "approver": user_request.approver.username if user_request.approver is not None else '',
+            "reason": user_request.reason if user_request.reason is not None else '',
+            "create_at": user_request.create_at,
+            "approved_at": user_request.approved_at if user_request.approved_at is not None else '',
+        } for user_request, user in result]
+
+        return requests_model
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Lỗi server: {str(e)}")
 
 
 # Api Reject yêu cầu của shipper:
 @router.post("/reject-request", status_code=status.HTTP_200_OK)
-async def get_all_request_by_status(user: user_dependency,
-                                    db: db_dependency,
-                                    reject_request_form: RequestForm):
+async def reject_request(user: user_dependency,
+                         db: db_dependency,
+                         reject_request_form: RequestForm):
     # Authen
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Authentication Failed')
@@ -211,9 +231,9 @@ async def get_all_request_by_status(user: user_dependency,
 
 # Api Accept yêu cầu của shipper:
 @router.post("/accept-request", status_code=status.HTTP_200_OK)
-async def get_all_request_by_status(user: user_dependency,
-                                    db: db_dependency,
-                                    accept_request_form: RequestForm):
+async def accept_request(user: user_dependency,
+                         db: db_dependency,
+                         accept_request_form: RequestForm):
     # Authen
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Authentication Failed')
@@ -267,7 +287,7 @@ async def get_all_request_by_status(user: user_dependency,
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail='Loại yêu cầu không hợp lệ !')
 
-        request_model.status = 'ACCEPT'
+        request_model.status = 'APPROVE'
         request_model.user_id_approved = user.get("id")
         request_model.reason = accept_request_form.reason
         request_model.approved_at = datetime.now()

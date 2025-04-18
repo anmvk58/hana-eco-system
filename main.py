@@ -24,11 +24,11 @@ app.include_router(todos.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-@app.exception_handler(HTTPException)
-async def redirect_404_handler(request: Request, exc: HTTPException):
-    if exc.status_code == 404:
-        return RedirectResponse(url="/common/page-404")
-    raise exc
+# @app.exception_handler(HTTPException)
+# async def redirect_404_handler(request: Request, exc: HTTPException):
+#     if exc.status_code == 404:
+#         return RedirectResponse(url="/common/page-404")
+#     raise exc
 
 
 @app.get("/")

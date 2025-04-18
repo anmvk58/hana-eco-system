@@ -122,7 +122,7 @@ async def request_remove_bill(user: user_dependency,
 
     # Kiểm tra đã từng gửi request này chưa ?
     try:
-        request: UserRequest = db.query(UserRequest).filter(UserRequest.user_id_reqeust == user.get("id"),
+        request: UserRequest = db.query(UserRequest).filter(UserRequest.user_id_request == user.get("id"),
                                                             UserRequest.bill_code == bill_code,
                                                             UserRequest.type == 'REMOVE_BILL',
                                                             UserRequest.status != 'REJECT').first()
@@ -133,7 +133,7 @@ async def request_remove_bill(user: user_dependency,
 
     # Cập tạo object_request_remove_bill:
     shipper_request = UserRequest(
-        user_id_reqeust=user.get("id"),
+        user_id_request=user.get("id"),
         bill_code=bill_code,
         type='REMOVE_BILL',
         content=f'Shipper {shipper.full_name} đã yêu cầu gỡ bỏ đơn {bill_code}',
@@ -184,7 +184,7 @@ async def request_change_cod(user: user_dependency,
 
     try:
         # Kiểm tra xem có spam request không ?
-        request: UserRequest = db.query(UserRequest).filter(UserRequest.user_id_reqeust == user.get("id"),
+        request: UserRequest = db.query(UserRequest).filter(UserRequest.user_id_request == user.get("id"),
                                                             UserRequest.bill_code == bill_code,
                                                             UserRequest.type == 'CHANGE_COD',
                                                             UserRequest.status != 'APPROVE').first()
@@ -196,7 +196,7 @@ async def request_change_cod(user: user_dependency,
 
     # Cập tạo object_request_remove_bill:
     shipper_request = UserRequest(
-        user_id_reqeust=user.get("id"),
+        user_id_request=user.get("id"),
         bill_code=bill_code,
         type='CHANGE_COD',
         content=f'Shipper {shipper.full_name} đã yêu cầu điều chỉnh COD đơn {bill_code} từ {bill_model.amount} sang {request_change_cod.amount}',

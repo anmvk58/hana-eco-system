@@ -4,36 +4,37 @@
     <title>Hana - List Requests</title>
 {% endblock %}
 
+{% block css %}
+
+{% endblock %}
+
 {% block content %}
 <h1 class="h3 mb-3 text-primary">Danh sách yêu cầu</h1>
 
 <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-3">
-        <select class="custom-select mb-3">
-            <option selected="">Chọn trạng thái</option>
-            <option>CREATE</option>
-            <option>REJECT</option>
-            <option>APPROVE</option>
+        <label class="form-label">Trạng thái</label>
+        <select class="custom-select mb-3" id="input_status">
+            <option value="" disabled selected>-- Chọn trạng thái --</option>
+            <option value="CREATE">CREATE</option>
+            <option value="REJECT">REJECT</option>
+            <option value="APPROVE">APPROVE</option>
         </select>
     </div>
+
     <div class="col-md-3">
-        <div class="form-group">
-            <label class="form-label">Date Range</label>
-            <input class="form-control" type="text" name="daterange" value="01/01/2018 - 01/15/2018">
-        </div>
+        <label class="form-label">Ngày tạo</label>
+        <input class="form-control" type="text" id="input_date" name="daterange" value={{date_picker}}>
     </div>
+
     <div class="col-md-3" id="button-function">
-        <button class="btn btn-primary" id="add-new-bill" onclick="add_new_bill()"><i
-                class="fa fa-plus-square"></i> Thêm
-        </button>
-        <button class="btn btn-secondary" id="reset-bill" onclick="reset_bill()"><i
-                class="fa fa-undo"></i> Reset
+        <label class="form-label">Chức năng</label>
+        <br>
+        <button class="btn btn-primary" id="btn-search-request">
+           Lọc <i class="align-middle fas fa-fw fa-search"></i>
         </button>
     </div>
     <div class="col-md-3">
-        <button class="btn btn-outline-info" data-toggle="modal" data-target="#defaultModalPrimary"><i
-                class="fa fa-check-square"></i> Xác nhận chốt đơn
-        </button>
     </div>
 </div>
 
@@ -58,9 +59,10 @@
                         <th>Lý do</th>
                         <th>Thời gian tạo</th>
                         <th>Thời gian phê duyệt</th>
+                        <th>Hành động</th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="table-data">
                         {% for request in requests_model %}
                         <tr>
                             <td>{{ request.request_id }}</td>
@@ -68,10 +70,14 @@
                             <td>{{ request.type }}</td>
                             <td>{{ request.content }}</td>
                             <td>{{ request.status }}</td>
-                            <td>{{ request.approver.username }}</td>
+                            <td>{{ request.approver }}</td>
                             <td>{{ request.reason }}</td>
                             <td>{{ request.create_at }}</td>
                             <td>{{ request.approved_at }}</td>
+                            <td>
+                                <a href="#"  onclick="get_detail_request({{request.request_id}}, '{{request.bill_code}}', '{{request.type}}', '{{request.content}}', '{{request.status}}')"
+                                   data-toggle="modal" data-target="#defaultModalPrimary"><i class="far fa-fw fa-eye"></i></a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -80,19 +86,19 @@
                     <div id="account-page-info">
                     </div>
                     <div id="nav-paging">
-                        <ul class="pagination pagination-sm">
-                            <li class="page-item" id="account-previousPage-btn"
-                                onclick="prevAccountPage()"><a class="page-link" href="#"><i
-                                    class="fas fa-angle-left"></i></a></li>
-                            <div style="display: flex;" id="page-number">
-                                <!-- <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item active"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li> -->
-                            </div>
-                            <li class="page-item" id="account-nextPage-btn"
-                                onclick="nextAccountPage()"><a class="page-link" href="#"><i
-                                    class="fas fa-angle-right"></i></a></li>
-                        </ul>
+<!--                        <ul class="pagination pagination-sm">-->
+<!--                            <li class="page-item" id="account-previousPage-btn"-->
+<!--                                onclick="prevAccountPage()"><a class="page-link" href="#"><i-->
+<!--                                    class="fas fa-angle-left"></i></a></li>-->
+<!--                            <div style="display: flex;" id="page-number">-->
+<!--                                &lt;!&ndash; <li class="page-item"><a class="page-link" href="#">1</a></li>-->
+<!--                                <li class="page-item active"><a class="page-link" href="#">2</a></li>-->
+<!--                                <li class="page-item"><a class="page-link" href="#">3</a></li> &ndash;&gt;-->
+<!--                            </div>-->
+<!--                            <li class="page-item" id="account-nextPage-btn"-->
+<!--                                onclick="nextAccountPage()"><a class="page-link" href="#"><i-->
+<!--                                    class="fas fa-angle-right"></i></a></li>-->
+<!--                        </ul>-->
                     </div>
                 </div>
 
@@ -101,5 +107,55 @@
     </div>
 </div>
 
+<!--Modal for details request-->
+<div class="modal fade" id="defaultModalPrimary" tabindex="-1" role="dialog"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết yêu cầu</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body m-2">
+                <p class="mb-0">Nhập lý do <span class="text-primary">Chấp nhận</span> hoặc <span class="text-danger">Từ chối</span> yêu cầu và bấm nút chức năng tương ứng</p>
+            </div>
+            <input type="text" class="form-control visible" id="request_id" readonly style="display: none">
+
+            <div class="modal-body row">
+                <label class="col-form-label col-sm-2 text-sm-right">Mã Bill</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="bill_code" readonly>
+                </div>
+                <label class="col-form-label col-sm-2 text-sm-right">Loại</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" id="request_type" readonly>
+                </div>
+            </div>
+            <div class="modal-body row">
+                <label class="col-form-label col-sm-2 text-sm-right">Nội dung</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" id="content" rows="2" readonly></textarea>
+                </div>
+            </div>
+            <div class="modal-body row">
+                <label class="col-form-label col-sm-2 text-sm-right">Lý do</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" id="reason" placeholder="Nhập lý do" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="btn-reject-request">Từ chối</button>
+                <button type="button" class="btn btn-primary" id="btn-accept-request">Chấp nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+    <script src="{{ url_for('static', path='/js/managers/managers.js') }}" ></script>
 {% endblock %}
 
